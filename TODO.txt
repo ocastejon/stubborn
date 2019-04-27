@@ -1,0 +1,7 @@
+- more pefile checks
+- target process -> choose/not fixed
+- Webapp frontend:
+    - redirect on POST
+    - fancy form
+    - error handling
+- AES encryption

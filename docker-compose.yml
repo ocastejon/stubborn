@@ -1,0 +1,13 @@
+version: "3.3"
+
+services:
+  stubborn:
+    build:
+      context: .
+#      dockerfile: Dockerfile
+    command: python app.py
+    volumes:
+     - ./app:/stubborn
+    ports:
+      - "5000:5000"
+    container_name: stubborn

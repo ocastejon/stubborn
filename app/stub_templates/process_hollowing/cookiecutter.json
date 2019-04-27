@@ -1,0 +1,1 @@
+{"target_dir": "some_path", "encryption_key": "supersecret", "build_type": "Debug", "compiler": "x86_64-w64-mingw32-g++", "windres": "x86_64-w64-mingw32-windres"}

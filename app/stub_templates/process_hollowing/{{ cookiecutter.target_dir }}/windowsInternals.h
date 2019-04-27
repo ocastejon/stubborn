@@ -3,8 +3,13 @@
 #ifndef STUBBORN_WININTERNALS_H
 #define STUBBORN_WININTERNALS_H
 
-#define BUFFER_SIZE 1000000 // improve. probably we do not need to be a constant
+#ifdef _WIN64
+#define VIRTUAL_ADDRESS DWORD64
+#else
+#define VIRTUAL_ADDRESS DWORD
+#endif
 
+const DWORD STATUS_SUCCESS = 0;
 typedef struct _UNICODE_STR
 {
     USHORT Length;
@@ -175,14 +180,12 @@ typedef DWORD (WINAPI *_NtUnmapViewOfSection)(
         PVOID BaseAddress
 );
 
+typedef struct _PE_HEADERS {
+    PIMAGE_DOS_HEADER DOSHeader;
+    PIMAGE_NT_HEADERS NTHeaders;
+    PIMAGE_SECTION_HEADER SectionHeaders;
+} PE_HEADERS, *PPE_HEADERS;
 
-typedef struct _LOADED_IMAGE {
-    PIMAGE_NT_HEADERS32 FileHeader;
-    WORD NumberOfSections;
-    PIMAGE_SECTION_HEADER Sections;
-} LOADED_IMAGE, *PLOADED_IMAGE;
-
-// Per relocations
 typedef struct BASE_RELOCATION_BLOCK {
     DWORD PageAddress;
     DWORD BlockSize;
@@ -193,50 +196,14 @@ typedef struct BASE_RELOCATION_ENTRY {
     USHORT Type : 4;
 } BASE_RELOCATION_ENTRY, *PBASE_RELOCATION_ENTRY;
 
-DWORD CountRelocationEntries(DWORD dwBlockSize) {
-    return (dwBlockSize - sizeof(BASE_RELOCATION_BLOCK)) / sizeof(BASE_RELOCATION_ENTRY);
-}
+DWORD CountRelocationEntries(DWORD dwBlockSize);
 
-PPEB FindRemotePEB(HANDLE hProcess) {
-    HMODULE hNTDLL = LoadLibraryA("ntdll");
-    if (!hNTDLL)
-        return nullptr;
+PPEB FindRemotePEB(HANDLE hProcess);
 
-    FARPROC fpNtQueryInformationProcess = GetProcAddress(hNTDLL, "NtQueryInformationProcess");
-    if (!fpNtQueryInformationProcess)
-        return nullptr;
+PPEB ReadRemotePEB(HANDLE hProcess);
 
-    auto ntQueryInformationProcess =(_NtQueryInformationProcess)fpNtQueryInformationProcess;
-    auto pBasicInfo = new PROCESS_BASIC_INFORMATION();
-    DWORD dwReturnLength = 0;
-    ntQueryInformationProcess(hProcess, 0, pBasicInfo ,sizeof(PROCESS_BASIC_INFORMATION), &dwReturnLength);
-    return pBasicInfo->PebBaseAddress;
-}
+PPE_HEADERS LoadPEHeaders(VIRTUAL_ADDRESS dwImageBase);
 
-PEB* ReadRemotePEB(HANDLE hProcess) {
-    PPEB dwPEBAddress = FindRemotePEB(hProcess);
-    PEB* pPEB = new PEB();
-    BOOL bSuccess = ReadProcessMemory (hProcess, (LPCVOID)dwPEBAddress, pPEB, sizeof(PEB), nullptr);
+DWORD GetMemProtectionFlag(DWORD dwCharacteristic);
 
-    if (!bSuccess)
-        return nullptr  ;
-
-    return pPEB;
-}
-
-// pot estar be fer utilities d'aquest tipus
-PIMAGE_NT_HEADERS32 GetNTHeaders(DWORD pBuffer) {
-    return (PIMAGE_NT_HEADERS32)(pBuffer +((PIMAGE_DOS_HEADER)pBuffer)->e_lfanew);
-}
-
-PLOADED_IMAGE GetLoadedImage(DWORD dwImageBase) {
-    auto pDosHeader = (PIMAGE_DOS_HEADER)dwImageBase;
-    PIMAGE_NT_HEADERS32 pNTHeaders = GetNTHeaders(dwImageBase);
-    auto pImage = new LOADED_IMAGE();
-    pImage->FileHeader = (PIMAGE_NT_HEADERS32)(dwImageBase + pDosHeader->e_lfanew);
-    pImage->NumberOfSections = pImage->FileHeader->FileHeader.NumberOfSections;
-    pImage->Sections = (PIMAGE_SECTION_HEADER)(dwImageBase + pDosHeader->e_lfanew + sizeof(IMAGE_NT_HEADERS32));
-    return pImage;
-}
-
-#endif //STUBBORN_WININTERNALS_H
+#endif // STUBBORN_WININTERNALS_H

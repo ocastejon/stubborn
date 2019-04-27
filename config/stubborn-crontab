@@ -1,0 +1,2 @@
+# Wipe everything that is more than 10 minutes old in the tmp/ directory
+*/5 * * * * find /stubborn/tmp/* -maxdepth 0 -mmin +10 -exec rm -rf {} \; 2>/dev/null
