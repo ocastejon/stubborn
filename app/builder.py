@@ -10,8 +10,7 @@ from cookiecutter.main import cookiecutter
 
 
 def build(file_data):
-    # key = bytearray(secrets.token_urlsafe(15), encoding="utf-8")
-    key = b"this is some supersecret password"
+    key = bytearray(secrets.token_urlsafe(15), encoding="utf-8")
     encrypted_data = encrypt(key, file_data)
     temp_path = os.path.join("/stubborn/tmp", str(uuid.uuid4()))
     pe = pefile.PE(data=file_data)

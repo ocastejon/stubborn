@@ -1,8 +1,11 @@
-from flask import Flask, flash, redirect, render_template, request, send_file, Session
 from builder import build
+from flask import Flask, flash, redirect, render_template, request, send_file, Session
+from flask_bootstrap import Bootstrap
+
 import secrets
 
 app = Flask(__name__)
+Bootstrap(app)
 app.config['SESSION_TYPE'] = 'memcached'
 app.config['SECRET_KEY'] = secrets.token_urlsafe(32)
 sess = Session()
