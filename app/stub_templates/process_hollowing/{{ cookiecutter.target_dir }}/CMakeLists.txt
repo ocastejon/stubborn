@@ -9,7 +9,10 @@ set(CMAKE_RC_COMPILER_INIT "/usr/bin/{{ cookiecutter.windres }}")
 ENABLE_LANGUAGE(RC)
 SET(CMAKE_RC_COMPILE_OBJECT "<CMAKE_RC_COMPILER> <FLAGS> -O coff <DEFINES> -i <SOURCE> -o <OBJECT>")
 
-#SET(CMAKE_CXX_FLAGS  "-mwindows")
+IF(CMAKE_BUILD_TYPE MATCHES RELEASE)
+    SET(CMAKE_CXX_FLAGS  "-mwindows")
+ENDIF(CMAKE_BUILD_TYPE MATCHES RELEASE)
+
 set(CMAKE_EXE_LINKER_FLAGS "-static-libgcc -static-libstdc++ -static -lpthread")
 
 add_executable(stubborn main.cpp resource.rc windowsInternals.h windowsInternals.cpp resource.h debug.cpp debug.h processHollower.cpp processHollower.h)

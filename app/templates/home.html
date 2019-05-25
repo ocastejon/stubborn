@@ -1,0 +1,117 @@
+{% extends "bootstrap/base.html" %}
+{% block title %}stubborn{% endblock %}
+
+{% block content %}
+{% from "_formhelpers.html" import render_errors %}
+<div class="py-5 text-center">
+    <h1>stubborn</h1>
+    <p class="lead">Start building your own crypter</p>
+</div>
+<form method=post enctype=multipart/form-data class="custom-form">
+{{ form.csrf_token }}
+<div class="container">
+  <div class="row">
+    <div class="col-md-8 offset-md-2">
+        {% with messages = get_flashed_messages(with_categories=true, category_filter=["global"]) %}
+          {% if messages %}
+            {% for category, message in messages %}
+              <div class="alert alert-danger alert-dismissible" role="alert">
+              <button type="button" class="close" data-dismiss="alert" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+              {{ message }}
+              </div>
+            {% endfor %}
+          {% endif %}
+        {% endwith %}
+        <h4 class="mb-3">Select Executable</h4>
+        <div class="d-block my-3">
+          <div class="custom-control custom-file">
+              {{ form.file(class_="custom-file-input form-control-file") }}
+              {{ form.file.label(class_="custom-file-label") }}
+              {{ render_errors(form.file) }}
+          </div>
+        </div>
+        <hr class="mb-4">
+
+        <h4 class="mb-3">Target Executable</h4>
+        <div class="d-block my-3">
+            {{ form.targetExe.label }}
+            {{ form.targetExe(class_="custom-select") }}
+            {{ render_errors(form.targetExe) }}
+        </div>
+        <hr class="mb-4">
+
+        <h4 class="mb-3">Build Type</h4>
+        <div class="d-block my-3">
+            {{ form.buildType.label }}
+            {% for subfield in form.buildType %}
+                <div class="custom-control custom-radio">
+                    {{ subfield(class_="custom-control-input") }}
+                    {{ subfield.label(class_="custom-control-label") }}
+                </div>
+            {% endfor %}
+            {{ render_errors(form.buildType) }}
+        </div>
+
+        <hr class="mb-4">
+
+        <h4 class="mb-3">Key Options</h4>
+        <div class="d-block my-3">
+        <div class="accordion" id="keyOptionsAccordion">
+            {{ form.keyType.label }}
+            {% for subfield in form.keyType %}
+                <div id="{{ subfield._value() }}Button" class="custom-control custom-radio">
+                    {{ subfield(class_="custom-control-input", data_toggle="collapse", data_target=form.get_target(subfield._value()), aria_controls=form.get_target(subfield._value())) }}
+                    {{ subfield.label(class_="custom-control-label") }}
+                </div>
+            {% endfor %}
+            {{ render_errors(form.keyType) }}
+            <div id="randomKeyOptions" class="collapse" aria-labelledby="randomKeyButton" data-parent="#keyOptionsAccordion">
+                <div class="card-body">
+                    <div class="custom-control custom-number">
+                        {{ form.keyLength.label(class_="col-form-label") }}
+                        {{ form.keyLength(class_="form-control") }}
+                        {{ render_errors(form.keyLength) }}
+                    </div>
+                </div>
+            </div>
+
+            <div id="userKeyOptions" class="collapse" aria-labelledby="userKeyButton" data-parent="#keyOptionsAccordion">
+                <div class="card-body">
+                    <div class="custom-control custom-text" >
+                        {{ form.customKey.label }}
+                        {{ form.customKey(class_="form-control", placeholder="Supersecret key!") }}
+                        <small class="text-muted">This should be used for debugging purposes only</small>
+                        {{ render_errors(form.customKey) }}
+                    </div>
+                </div>
+            </div>
+        </div>
+        </div>
+        <hr class="mb-4">
+        {{ form.submit(class_="btn btn-primary btn-lg btn-block") }}
+    </div>
+  </div>
+</div>
+</form>
+
+<div class="pt-5 text-center">
+  <footer class="my-5 pt-5 text-muted text-center text-small">
+    <p class="mb-1">&copy; 2018-2019 Oriol Castejón</p>
+  </footer>
+</div>
+{% endblock %}
+
+{% block scripts %}
+{{super()}}
+<script>
+    $('#file').on('change',function(){
+        var fileName = $(this).val();
+        $(this).next('.custom-file-label').html(fileName.replace(/^.*[\\\/]/, ''));
+    });
+    $( document ).ready(function() {
+        if ($("#keyType-0").is(':checked')) {$("#randomKeyOptions").addClass("show")}
+        else if ($("#keyType-1").is(':checked')) {$("#userKeyOptions").addClass("show")}
+    });
+</script>
+{% endblock %}
+

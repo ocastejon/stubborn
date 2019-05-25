@@ -1,6 +1,7 @@
 from builder import build
 from flask import Flask, flash, redirect, render_template, request, send_file, Session
 from flask_bootstrap import Bootstrap
+from form import StubbornForm
 
 import secrets
 
@@ -13,20 +14,22 @@ sess = Session()
 
 @app.route('/', methods=['GET', 'POST'])
 def build_crypter():
-    if request.method == 'POST':
-        if 'file' not in request.files:
-            flash('No file part')
-            return redirect(request.url)
-        file = request.files['file']
+    form = StubbornForm()
+    if form.validate_on_submit():
+        file = form.file.data
         if file.filename == '':
-            flash('No selected file')
+            flash('No selected file', 'file')
             return redirect(request.url)
-        path = build(file.read())
+        try:
+            path = build(file.read(), target_exe=form.targetExe.data, build_type=form.buildType.data,
+                         key_type=form.keyType.data, key_length=form.keyLength.data, custom_key=form.customKey.data)
+        except:
+            path = None
         if not path:
-            flash('Something failed')
+            flash('Something failed', 'global')
             return redirect(request.url)
         return send_file(path, as_attachment=True, attachment_filename="packed-{}".format(file.filename))
-    return render_template("base.html")
+    return render_template("home.html", form=form)
 
 
 if __name__ == '__main__':
