@@ -6,8 +6,8 @@
 #include "decrypt.h"
 #include "windowsInternals.h"
 
-#define IMPORTS_KEY "abcdefghijk"
-#define IMPORTS_KEY_LENGTH 11
+#define IMPORTS_KEY "{{ cookiecutter.imports_key }}"
+#define IMPORTS_KEY_LENGTH {{ cookiecutter.imports_key_length }}
 
 typedef BOOL (WINAPI *_CreateProcessA)(
         LPCSTR                lpApplicationName,

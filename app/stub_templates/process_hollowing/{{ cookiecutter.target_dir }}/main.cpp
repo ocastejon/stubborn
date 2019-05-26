@@ -30,8 +30,12 @@ int main() {
     char lpHostApplicationName[] = R"({{ cookiecutter.target_exe }})";
 #endif
 
-    if (!PHollower.execute(lpHostApplicationName, lpGuestPEData))
+    if (!PHollower.execute(lpHostApplicationName, lpGuestPEData)) {
+    #ifndef NDEBUG
+        system("pause");
+    #endif
         return -1;
+    }
 #ifndef NDEBUG
     system("pause");
 #endif

