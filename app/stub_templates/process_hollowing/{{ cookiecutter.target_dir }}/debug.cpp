@@ -19,13 +19,15 @@ void DebugData(char const *message, VIRTUAL_ADDRESS data, int dataFormat) {
     if (dataFormat == FORMAT_INT) {
         printf("    %s: %d\n", message, data);
     } else if(dataFormat == FORMAT_ADDRESS)  {
-#ifdef _WIN64
+    #ifdef _WIN64
         printf("    %s: 0x%016llx\n", message, data);
-#else
+    #else
         printf("    %s: 0x%08x\n", message, data);
-#endif
+    #endif
     } else if (dataFormat == FORMAT_SECTION) {
         printf("    %s: %.8s\n", message, data);
+    } else if (dataFormat == FORMAT_STRING) {
+        printf("    %s: %s\n", message, data);
     }
 #endif
 }

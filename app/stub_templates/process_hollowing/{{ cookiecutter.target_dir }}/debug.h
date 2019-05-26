@@ -6,6 +6,7 @@
 #define FORMAT_INT 0
 #define FORMAT_ADDRESS 1
 #define FORMAT_SECTION 2
+#define FORMAT_STRING 3
 
 void DebugInfoMessage(char const *message);
 

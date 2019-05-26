@@ -175,11 +175,6 @@ typedef DWORD (WINAPI* _NtQueryInformationProcess)(
         PDWORD ReturnLength
 );
 
-typedef DWORD (WINAPI *_NtUnmapViewOfSection)(
-        HANDLE ProcessHandle,
-        PVOID BaseAddress
-);
-
 typedef struct _PE_HEADERS {
     PIMAGE_DOS_HEADER DOSHeader;
     PIMAGE_NT_HEADERS NTHeaders;
