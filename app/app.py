@@ -20,11 +20,11 @@ def build_crypter():
         if file.filename == '':
             flash('No selected file', 'file')
             return redirect(request.url)
-        try:
-            path = build(file.read(), target_exe=form.targetExe.data, build_type=form.buildType.data,
-                         key_type=form.keyType.data, key_length=form.keyLength.data, custom_key=form.customKey.data)
-        except:
-            path = None
+        # try:
+        path = build(file.read(), target_exe=form.targetExe.data, build_type=form.buildType.data,
+                     key_type=form.keyType.data, key_length=form.keyLength.data, custom_key=form.customKey.data)
+        # except:
+        #     path = None
         if not path:
             flash('Something failed', 'global')
             return redirect(request.url)

@@ -1,1 +1,10 @@
-{"target_dir": "some_path", "encryption_key": "supersecret", "target_exe_type": 0, "target_exe": "", "build_type": "Debug", "compiler": "x86_64-w64-mingw32-g++", "windres": "x86_64-w64-mingw32-windres"}
+{
+  "target_dir": "some_path",
+  "encryption_key": "supersecret",
+  "key_length": 11,
+  "target_exe_type": "TARGET_TYPE_SELF",
+  "target_exe": "",
+  "build_type": "Debug",
+  "compiler": "x86_64-w64-mingw32-g++",
+  "windres": "x86_64-w64-mingw32-windres"
+}
