@@ -18,7 +18,7 @@ def validate_custom_key(form, field):
 class StubbornForm(FlaskForm):
     file = FileField("Choose a file...", validators=[FileRequired(message="A payload file is required")])
     targetExe = SelectField("Select the executable to inject your payload",
-                            choices=[("same", "Same executable file"), ("calc", "calc.exe"), ("notepad", "notepad.exe"),
+                            choices=[("same", "Same stub file"), ("calc", "calc.exe"), ("notepad", "notepad.exe"),
                                      ("svchost", "svchost.exe")], default="same",
                             validators=[InputRequired(message="A target executable is required")])
     buildType = RadioField("Select the desired build type", choices=[("release", "Release"), ("debug", "Debug")],
