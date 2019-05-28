@@ -29,7 +29,7 @@ class StubbornForm(FlaskForm):
     keyLength = IntegerField("Key Length", default=32,
                              validators=[validate_key_length])
     customKey = StringField("Enter the key you want to use", validators=[validate_custom_key])
-    submit = SubmitField("Build your crypter!")
+    submit = SubmitField("Pack your file!")
 
     @staticmethod
     def get_target(value):
