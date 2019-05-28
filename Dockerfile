@@ -11,8 +11,7 @@ COPY config/start.sh /root/start.sh
 WORKDIR /stubborn
 COPY app/requirements.txt ./
 RUN pip install --no-cache-dir -r requirements.txt
-ENV FLASK_ENV development
 
-#COPY . .
+COPY . .
 
 ENTRYPOINT [ "bash", "/root/start.sh" ]

@@ -4,7 +4,6 @@ services:
   stubborn:
     build:
       context: .
-#      dockerfile: Dockerfile
     command: python app.py
     volumes:
      - ./app:/stubborn
