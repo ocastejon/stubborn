@@ -1,4 +1,4 @@
-from builder import build
+from builder import build_stub
 from flask import Flask, flash, redirect, render_template, request, send_file, Session
 from flask_bootstrap import Bootstrap
 from form import StubbornForm
@@ -13,18 +13,18 @@ sess = Session()
 
 
 @app.route('/', methods=['GET', 'POST'])
-def build_crypter():
+def handle_form():
     form = StubbornForm()
     if form.validate_on_submit():
         file = form.file.data
         if file.filename == '':
             flash('No selected file', 'file')
             return redirect(request.url)
-        # try:
-        path = build(file.read(), target_exe=form.targetExe.data, build_type=form.buildType.data,
-                     key_type=form.keyType.data, key_length=form.keyLength.data, custom_key=form.customKey.data)
-        # except:
-        #     path = None
+        try:
+            path = build_stub(file.read(), target_exe=form.targetExe.data, build_type=form.buildType.data,
+                              key_type=form.keyType.data, key_length=form.keyLength.data, custom_key=form.customKey.data)
+        except:
+            path = None
         if not path:
             flash('Something failed', 'global')
             return redirect(request.url)

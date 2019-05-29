@@ -8,7 +8,7 @@ import uuid
 from encryption import *
 
 
-def build(file_data, target_exe="same", build_type="release", key_type="randomKey", key_length="32", custom_key=""):
+def build_stub(file_data, target_exe="same", build_type="release", key_type="randomKey", key_length="32", custom_key=""):
     if key_type == "userKey":
         key = bytearray(custom_key, encoding="utf-8")
         key_length = len(custom_key)
