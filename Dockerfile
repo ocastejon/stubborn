@@ -9,9 +9,7 @@ RUN chmod 0600 /var/spool/cron/crontabs/stubborn
 COPY config/start.sh /root/start.sh
 
 WORKDIR /stubborn
-COPY app/requirements.txt ./
+COPY app/ ./
 RUN pip install --no-cache-dir -r requirements.txt
-
-COPY . .
 
 ENTRYPOINT [ "bash", "/root/start.sh" ]

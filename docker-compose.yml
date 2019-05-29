@@ -4,9 +4,6 @@ services:
   stubborn:
     build:
       context: .
-    command: python app.py
-    volumes:
-     - ./app:/stubborn
     ports:
       - "5000:5000"
     container_name: stubborn
