@@ -1,0 +1,9 @@
+#ifndef STUBBORN_RESOURCE_H
+#define STUBBORN_RESOURCE_H
+
+#define IDR_RCDATA1 101
+#define RESOURCE_KEY "\xcc\xb3\x27\x09\xfc\x32\xac\x7c\x49\xec\x92\x05\xc3\x72\x4c\xab\x08\x46\x41\xec\x93\x8b\x57\x39\x25\x50\xb0\xff\xce\xee\x11\x2f"
+#define RESOURCE_KEY_LENGTH 32
+
+#endif // STUBBORN_RESOURCE_H
+

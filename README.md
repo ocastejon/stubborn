@@ -22,6 +22,11 @@ This will start a Flask app. The UI can then be accessed at http://127.0.0.1:500
 
 Upload your file, select the desired options, and you're ready to go!
 
+## Example
+
+You can find a packed `HelloWorld.exe` produced by **stubborn** in the [example](./example) folder. Also, in this folder
+you will find all the code of the corresponding stub.
+
 ## Features
 
 - Supports Windows .exe files, both 32 and 64 bits

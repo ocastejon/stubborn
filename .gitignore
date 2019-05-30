@@ -1,3 +1,4 @@
 .idea/
-cmake-build-debug/
 app/__pycache__
+cmake-build-debug/
+example/code/cmake/
