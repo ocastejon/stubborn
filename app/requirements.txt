@@ -3,7 +3,7 @@ binaryornot==0.4.4
 certifi==2019.3.9
 chardet==3.0.4
 Click==7.0
-cookiecutter==1.6.0
+cookiecutter==2.1.1
 Flask==1.0.2
 Flask-Bootstrap4==4.0.2
 Flask-WTF==0.14.2
