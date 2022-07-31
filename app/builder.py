@@ -37,7 +37,7 @@ def build_stub(file_data, target_exe="same", build_type="release", key_type="ran
     os.mkdir(os.path.join(temp_path, "cmake"))
     subprocess.call(["cmake", "../"], cwd=os.path.join(temp_path, "cmake"))
     subprocess.call(["make"], cwd=os.path.join(temp_path, "cmake"))
-    file_path = os.path.join(temp_path, "cmake", "stubborn")
+    file_path = os.path.join(temp_path, "cmake", "stubborn.exe")
     if os.path.isfile(file_path):
         return file_path
     else:
