@@ -1,6 +1,6 @@
 arrow==0.15.1
 binaryornot==0.4.4
-certifi==2019.3.9
+certifi==2022.12.7
 chardet==3.0.4
 Click==7.0
 cookiecutter==2.1.1
